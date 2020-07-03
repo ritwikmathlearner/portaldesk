@@ -48,7 +48,7 @@ class TaskController extends Controller
                 $tasks = Task::where('is_allocated_to', Auth::user()->id)
                     ->orderBy('tutor_deadline', 'asc')
                     ->where('status', '=', 'escalated')
-                    ->whereNotNull ('upload_date_time')
+                    ->whereNotNull('upload_date_time')
                     ->paginate(15);
             } elseif (\request('completed')) {
                 $tasks = Task::where('is_allocated_to', Auth::user()->id)
@@ -57,13 +57,13 @@ class TaskController extends Controller
                         $query->where('status', '=', 'uploaded')
                             ->orWhere('status', '=', 'delivered');
                     })
-                    ->whereNotNull ('upload_date_time')
+                    ->whereNotNull('upload_date_time')
                     ->paginate(15);
             } elseif (\request('failed')) {
                 $tasks = Task::where('is_allocated_to', Auth::user()->id)
                     ->orderBy('tutor_deadline', 'asc')
                     ->where('status', '=', 'failed')
-                    ->whereNotNull ('upload_date_time')
+                    ->whereNotNull('upload_date_time')
                     ->paginate(15);
             } else {
                 $tasks = Task::where('is_allocated_to', Auth::user()->id)
@@ -479,6 +479,26 @@ class TaskController extends Controller
                 ->with('success', 'Task is marked as failed successfully');
         }
         return back()->with('error', 'You are not allowed to perform this request');
+    }
+
+    public function storeMessage(Task $task, Request $request)
+    {
+        $validatedData = $request->validate([
+            'message' => 'required|max:500|min:5',
+            'type' => 'required|in:reply,clarification,confirmation,extra word'
+        ]);
+        $user = Auth::user();
+        $invitedUsers = $task->invitedTutors()->pluck('user_id')->toArray();
+        if ($task->isOwnedByUser() || $task->allocatedTo() == $user || in_array($user->id, $invitedUsers)) {
+            $task->userDiscussions()->attach($user->id, [
+                'message' => $validatedData['message'],
+                'type' => $validatedData['type']
+            ]);
+            return redirect()
+                ->route('tasks.show', ['task' => $task]);
+        } else {
+            return back()->with('error', 'You are not allowed to perform this request');
+        }
     }
 
     /**

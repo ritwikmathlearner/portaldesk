@@ -4,10 +4,11 @@
     <div class="container">
         <div class="row">
             <div class="col-md-7 p-3">
-            @if($task->isOwnedByUser())
+                @if($task->isOwnedByUser())
                     <div class="d-flex">
                         <div>
-                            <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#escalateModal">
+                            <button type="button" class="btn btn-warning" data-toggle="modal"
+                                    data-target="#escalateModal">
                                 Escalate
                             </button>
                             <div>
@@ -52,7 +53,8 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    Close
                                                 </button>
                                                 <button type="submit" class="btn btn-warning">Submit</button>
                                             </div>
@@ -107,7 +109,8 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    Close
                                                 </button>
                                                 <button type="submit" class="btn btn-danger">Submit</button>
                                             </div>
@@ -118,19 +121,19 @@
                         </div>
                     </div>
                     <div class="container">
-                    <div class="row align-items-center mb-5">
-                        <span class="h3 mr-2 my-0">{{ ucfirst($task->title) }}</span>
-                        <small
-                            class="text-light
+                        <div class="row align-items-center mb-5">
+                            <span class="h3 mr-2 my-0">{{ ucfirst($task->title) }}</span>
+                            <small
+                                class="text-light
                                     {{ $task->status == 'failed'
                                         ? 'bg-danger' : ($task->status == 'unproductive'
                                         ? 'bg-secondary' : ($task->status == 'delivered'
                                         ? 'bg-success' : 'bg-primary')) }}
-                                px-2 py-1 rounded">
-                            {{ ucfirst($task->status) }}
-                        </small>
+                                    px-2 py-1 rounded">
+                                {{ ucfirst($task->status) }}
+                            </small>
+                        </div>
                     </div>
-                </div>
                 @endif
                 <div class="container my-2">
                     <div class="row align-items-center">
@@ -456,7 +459,8 @@
                 @else
                     @if($task->allocatedTo == \Illuminate\Support\Facades\Auth::user())
                         <div class="d-flex justify-content-center flex-column align-items-center">
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                            <button type="button" class="btn btn-primary" data-toggle="modal"
+                                    data-target="#exampleModal">
                                 Upload solution
                             </button>
                             <div>
@@ -497,7 +501,8 @@
                                                         <div class="form-check form-check-inline">
                                                             <input class="form-check-input" type="radio"
                                                                    name="upload_type" id="partial" value="partial">
-                                                            <label class="form-check-label" for="partial">Partial</label>
+                                                            <label class="form-check-label"
+                                                                   for="partial">Partial</label>
                                                         </div>
                                                     @endif
                                                 </div>
@@ -511,7 +516,8 @@
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                                                    Close
                                                 </button>
                                                 <button type="submit" class="btn btn-primary">Upload solution</button>
                                             </div>
@@ -524,15 +530,97 @@
                 @endif
             </div>
             <hr>
-            <div class="container">
-                <div class="row p-3 mt-3 border rounded bg-secondary text-light">
+            <div class="container" id="discussion">
+                <div class="row align-items-center p-3 mt-3 border rounded bg-secondary text-light">
                     <div class="col-12">
                         <h1 class="text-center">Discussions</h1>
                     </div>
                     <div
-                        class="col-12 col-md-8 bg-white text-secondary rounded"
-                        style="height: 50vh; overflow-y: scroll"></div>
-                    <div class="col-12 col-md-4"></div>
+                        class="col-12 col-md-8 bg-white text-secondary rounded d-flex justify-content-start flex-column-reverse p-3"
+                        style="height: 50vh; overflow-y: scroll">
+                        @if($task->isOwnedByUser())
+                            @foreach($task->userDiscussions as $message)
+                                <div class="p-2 text-light m-0 my-2 rounded
+                                {{ $message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id ? 'align-self-end bg-success' : 'align-self-start bg-primary'}}
+                                    "
+                                     style="max-width: 90%;">
+                                    <small class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
+                                    <span class="d-block">{{ $message->pivot->message }}</span>
+                                    @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
+                                        <small><i>By: </i> {{ App\User::find($message->pivot->user_id)->name }}</small>
+                                    @else
+                                        <small>You</small>
+                                    @endif
+                                    <small><i>On: </i>{{ \Carbon\Carbon::parse($message->pivot->created_at)->toDayDateTimeString() }}
+                                    </small>
+
+                                </div>
+                            @endforeach
+                        @else
+                            @foreach($task->userDiscussions as $message)
+                                @if($message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id || $message->pivot->user_id == $task->user->id)
+                                    <div class="p-2 text-light m-0 my-2 rounded
+                                {{ $message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id ? 'align-self-end bg-success' : 'align-self-start bg-primary'}}
+                                        "
+                                         style="max-width: 90%;">
+                                        <small class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
+                                        <span class="d-block">{{ $message->pivot->message }}</span>
+                                        @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
+                                            <small><i>By: </i> {{ App\User::find($message->pivot->user_id)->name }}
+                                            </small>
+                                        @else
+                                            <small>You</small>
+                                        @endif
+                                        <small><i>On: </i>{{ \Carbon\Carbon::parse($message->pivot->created_at)->toDayDateTimeString() }}
+                                        </small>
+
+                                    </div>
+                                @endif
+                            @endforeach
+                        @endif
+                    </div>
+                    <div class="col-12 col-md-4 px-0 px-md-3 mt-3 mt-md-0">
+                        <form
+                            action="{{ route('tasks.message', ['task' => $task]) }}"
+                            method="POST">
+                            @csrf
+                            <div class="form-group">
+                                <label for="message">Your message</label>
+                                <textarea
+                                    name="message"
+                                    id="message"
+                                    class="form-control"
+                                    rows="3"
+                                    placeholder="Enter your message here"
+                                    required>{{ old('message') }}</textarea>
+                                @error('message')
+                                <small class="text-warning">{{ $message }}</small>
+                                @enderror
+                            </div>
+                            <div class="form-group">
+                                <label for="type">Message type</label>
+                                <select name="type" id="type" class="form-control">
+                                    <option disabled selected>Select type...</option>
+                                    <option value="reply">Reply</option>
+                                    <option value="clarification">Clarification</option>
+                                    <option value="extra word">Extra word</option>
+                                    <option value="confirmation">Confirmation</option>
+                                    <option value="progress">Progress update</option>
+                                </select>
+                                @error('type')
+                                <small class="text-warning">{{ $message }}</small>
+                                @enderror
+                            </div>
+                            <div class="d-flex">
+                                <button class="btn btn-success w-50 mx-auto">
+                                    Send
+                                    <span class="ml-3">
+                                    <i class="fas fa-paper-plane"></i>
+                                </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>

@@ -32,5 +32,6 @@ Route::post('/tasks/{task}/requirementUpload', 'TaskController@requirementUpload
 Route::post('/tasks/{task}/changeStatus', 'TaskController@changeStatus')->name('tasks.changeStatus');
 Route::post('/tasks/{task}/escalate', 'TaskController@escalate')->name('tasks.escalate');
 Route::post('/tasks/{task}/fail', 'TaskController@fail')->name('tasks.fail');
+Route::post('/tasks/{task}/message', 'TaskController@storeMessage')->name('tasks.message');
 Route::resource('tags', 'TagController')->only(['store', 'destroy']);
 

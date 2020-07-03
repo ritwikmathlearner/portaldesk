@@ -52,9 +52,20 @@ class User extends Authenticatable
         return $this->belongsToMany('App\Task', 'task_invitation')->withTimestamps();
     }
 
+    public function taskDiscussions()
+    {
+        return $this->belongsToMany('App\Task', 'discussions')
+            ->using('App\Discussion')
+            ->withPivot([
+                'message',
+                'type',
+                'created_at'
+            ]);
+    }
+
     public function isAnOwner()
     {
-        if($this->role === 'owner') {
+        if ($this->role === 'owner') {
             return true;
         } else {
             return false;
@@ -63,7 +74,7 @@ class User extends Authenticatable
 
     public function isATutor()
     {
-        if($this->role === 'tutor') {
+        if ($this->role === 'tutor') {
             return true;
         } else {
             return false;
@@ -72,7 +83,7 @@ class User extends Authenticatable
 
     public function isTheAdmin()
     {
-        if($this->role === 'admin') {
+        if ($this->role === 'admin') {
             return true;
         } else {
             return false;

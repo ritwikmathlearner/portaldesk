@@ -45,6 +45,17 @@ class Task extends Model
         return $this->belongsToMany('App\Tag')->withTimestamps();
     }
 
+    public function userDiscussions()
+    {
+        return $this->belongsToMany('App\User', 'discussions')
+            ->using('App\Discussion')
+            ->withPivot([
+                'message',
+                'type',
+                'created_at'
+            ]);
+    }
+
     public function isOwnedByUser()
     {
         if($this->created_by != Auth::user()->id) {
