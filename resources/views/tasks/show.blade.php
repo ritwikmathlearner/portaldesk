@@ -525,10 +525,14 @@
             </div>
             <hr>
             <div class="container">
-                <div class="row p-3 mt-3">
-                    <div class="col">
+                <div class="row p-3 mt-3 border rounded bg-secondary text-light">
+                    <div class="col-12">
                         <h1 class="text-center">Discussions</h1>
                     </div>
+                    <div
+                        class="col-12 col-md-8 bg-white text-secondary rounded"
+                        style="height: 50vh; overflow-y: scroll"></div>
+                    <div class="col-12 col-md-4"></div>
                 </div>
             </div>
         </div>
