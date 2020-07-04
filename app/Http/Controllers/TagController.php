@@ -63,8 +63,6 @@ class TagController extends Controller
             ->whereIn('tag_id', $tags)
             ->distinct()
             ->get();
-        foreach ($tasks as $task) {
-            var_dump($task->invitedTutors);
-        }
+        return view('tags.search', ['tasks' => $tasks]);
     }
 }
