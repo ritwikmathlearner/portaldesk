@@ -4,6 +4,7 @@ namespace App\Http\Livewire;
 
 use App\Tag;
 use App\Task;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class TaskSearchBar extends Component
@@ -26,10 +27,12 @@ class TaskSearchBar extends Component
     public function updatedQuery()
     {
         $this->tasks = [];
-        $tag = Tag::where('tag_name', 'like', '%'.$this->query.'%')->orderby('tag_name', 'asc')->first();
-        if(!empty($tag)) {
-            $this->tasks = $tag->tasks;
-        }
+        $tags = Tag::where('tag_name', 'like', '%' . $this->query . '%')->orderby('tag_name', 'asc')->pluck('id');
+        $this->tasks = Task::join('tag_task', 'tasks.id', '=', 'task_id')
+            ->select('tasks.*')
+            ->whereIn('tag_id', $tags)
+            ->distinct()
+            ->get();
     }
 
     public function render()

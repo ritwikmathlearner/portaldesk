@@ -65,7 +65,7 @@
                             </li>
                         @endif
                     @else
-                        <form class="form-inline my-2 my-lg-0">
+                        <form action="{{ route('tags.search') }}" method="GET" class="form-inline my-2 my-lg-0">
                             <livewire:task-search-bar/>
                         </form>
                         <li class="nav-item">

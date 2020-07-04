@@ -6,6 +6,7 @@ use App\Tag;
 use App\Task;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class TagController extends Controller
 {
@@ -52,5 +53,18 @@ class TagController extends Controller
         return redirect()
             ->route('tasks.show', ['task' => $task])
             ->with('error', 'You are not authorized perform the request');
+    }
+
+    public function search(Request $request)
+    {
+        $tags = Tag::where('tag_name', 'like', '%' . $request->tag . '%')->orderby('tag_name', 'asc')->pluck('id');
+        $tasks = Task::join('tag_task', 'tasks.id', '=', 'task_id')
+            ->select('tasks.*')
+            ->whereIn('tag_id', $tags)
+            ->distinct()
+            ->get();
+        foreach ($tasks as $task) {
+            var_dump($task->invitedTutors);
+        }
     }
 }
