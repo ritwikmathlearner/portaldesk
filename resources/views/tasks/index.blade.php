@@ -40,11 +40,12 @@
                                     <h5 class="h5 font-weight-bold mb-0">{{ $task->title }}</h5>
                                 </a>
                                 <small
-                                    class="text-light
-                                    <?php
-                                    echo $task->status == 'failed' ? 'bg-danger' : ($task->status == 'unproductive' ? 'bg-secondary' : ($task->status == 'delivered' ? 'bg-success' : 'bg-primary'))
-                                    ?>
-                                        px-2 py-1 rounded">
+                                    class="border
+                                    {{ $task->status == 'failed'
+                                        ? 'border-danger text-danger' : ($task->status == 'unproductive'
+                                        ? 'border-secondary text-secondary' : ($task->status == 'delivered'
+                                        ? 'border-success text-success' : 'border-primary text-primary')) }}
+                                        px-2 py-1 rounded-pill">
                                     {{ ucfirst($task->status) }}
                                 </small>
                             </div>

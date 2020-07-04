@@ -124,12 +124,12 @@
                         <div class="row align-items-center mb-5">
                             <span class="h3 mr-2 my-0">{{ ucfirst($task->title) }}</span>
                             <small
-                                class="text-light
+                                class="border
                                     {{ $task->status == 'failed'
-                                        ? 'bg-danger' : ($task->status == 'unproductive'
-                                        ? 'bg-secondary' : ($task->status == 'delivered'
-                                        ? 'bg-success' : 'bg-primary')) }}
-                                    px-2 py-1 rounded">
+                                        ? 'border-danger text-danger' : ($task->status == 'unproductive'
+                                        ? 'border-secondary text-secondary' : ($task->status == 'delivered'
+                                        ? 'border-success text-success' : 'border-primary text-primary')) }}
+                                    px-2 py-1 rounded-pill">
                                 {{ ucfirst($task->status) }}
                             </small>
                         </div>
@@ -303,7 +303,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <input type="hidden" name="task_id" value="{{ $task->id }}">
-                                            <button type="submit" class="btn p-1 m-1 border border-info text-info">
+                                            <button type="submit" class="btn px-2 py-1 rounded-pill m-1 border border-info text-info">
                                                 {{ $tag->tag_name }}
                                                 <i class="fas fa-times text-danger ml-1"></i>
                                             </button>
@@ -399,7 +399,7 @@
                                       onsubmit="return confirm('You want to deallocate tutor from the task?');"
                                 >
                                     @csrf
-                                    <button type="submit" class="btn p-1 ml-2 border border-success text-success">
+                                    <button type="submit" class="btn px-2 py-1 rounded-pill ml-2 border border-success text-success">
                                         {{ $task->allocatedTo->name }}
                                         <i class="fas fa-times text-danger ml-1"></i>
                                     </button>
@@ -424,7 +424,7 @@
                                     >
                                         @csrf
                                         <input type="hidden" name="tutorId" value="{{ $tutor->id }}">
-                                        <button type="submit" class="btn p-1 m-1 border border-info text-info">
+                                        <button type="submit" class="btn py-1 px-2 m-1 border border-info text-info rounded-pill">
                                             {{ $tutor->name }}
                                             <i class="fas fa-times text-danger ml-1"></i>
                                         </button>
