@@ -71,55 +71,40 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('home') }}">Dashboard</a>
                         </li>
-                        @if(\Illuminate\Support\Facades\Auth::user()->isATutor())
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    Task <span class="caret"></span>
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    <a href="{{ route('tasks.index') }}" class="dropdown-item" >Allocated tasks</a>
-                                    <a href="{{ route('tasks.index').'?invited=true' }}" class="dropdown-item" >Invited tasks</a>
-                                    <a href="{{ route('tasks.index').'?missed=true' }}" class="dropdown-item" >Missed deadlines</a>
-                                    <a href="{{ route('tasks.index').'?escalated=true' }}" class="dropdown-item" >Escalated</a>
-                                    <a href="{{ route('tasks.index').'?completed=true' }}" class="dropdown-item" >Completed</a>
-                                    <a href="{{ route('tasks.index').'?failed=true' }}" class="dropdown-item" >Failed</a>
-                                </div>
-                            </li>
-                        @else
-                            <li class="nav-item dropdown">
-                                <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
-                                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                    Task <span class="caret"></span>
-                                </a>
-
-                                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{{ route('tasks.index') }}">All Tasks</a>
-                                    <a class="dropdown-item" href="{{ route('tasks.create') }}">Create</a>
-                                </div>
-                            </li>
-                        @endif
                         <li class="nav-item dropdown">
-                            <a id="navbarDropdown" class="nav-link dropdown-toggle" href="{{ route('tasks.index') }}"
-                               role="button"
+                            <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button"
                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
-                                {{ Auth::user()->name }} <span class="caret"></span>
+                                Task <span class="caret"></span>
                             </a>
 
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                    {{ __('Logout') }}
-                                </a>
-
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST"
-                                      style="display: none;">
-                                    @csrf
-                                </form>
+                                <a class="dropdown-item" href="{{ route('tasks.index') }}">All Tasks</a>
+                                @if(\Illuminate\Support\Facades\Auth::user()->isAnOwner())
+                                    <a class="dropdown-item" href="{{ route('tasks.create') }}">Create</a>
+                                @else
                             </div>
                         </li>
+                    @endif
+                    <li class="nav-item dropdown">
+                        <a id="navbarDropdown" class="nav-link dropdown-toggle" href="{{ route('tasks.index') }}"
+                           role="button"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
+                            {{ Auth::user()->name }} <span class="caret"></span>
+                        </a>
+
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ route('logout') }}"
+                               onclick="event.preventDefault();
+                                                     document.getElementById('logout-form').submit();">
+                                {{ __('Logout') }}
+                            </a>
+
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST"
+                                  style="display: none;">
+                                @csrf
+                            </form>
+                        </div>
+                    </li>
                     @endguest
                 </ul>
             </div>

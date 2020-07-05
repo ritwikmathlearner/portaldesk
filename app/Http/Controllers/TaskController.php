@@ -35,43 +35,19 @@ class TaskController extends Controller
     public function index(Request $request)
     {
         if (Auth::user()->isAnOwner()) {
-            $tasks = Task::where('created_by', Auth::user()->id)->orderBy('student_deadline', 'desc')->paginate(15);
+            $tasks = Task::where('created_by', Auth::user()->id)->orderBy('student_deadline', 'desc')->paginate(5);
         } elseif (Auth::user()->isATutor()) {
-            if (\request('invited')) {
-                $tasks = Auth::user()->invitedTasks->whereNull('is_allocated_to')->sortBy('tutor_deadline');
-            } elseif (\request('missed')) {
-                $tasks = Task::where('is_allocated_to', Auth::user()->id)
-                    ->where('tutor_deadline', '<', now())
-                    ->orderBy('tutor_deadline', 'asc')
-                    ->paginate(15);
-            } elseif (\request('escalated')) {
-                $tasks = Task::where('is_allocated_to', Auth::user()->id)
-                    ->orderBy('tutor_deadline', 'asc')
-                    ->where('status', '=', 'escalated')
-                    ->whereNotNull('upload_date_time')
-                    ->paginate(15);
-            } elseif (\request('completed')) {
-                $tasks = Task::where('is_allocated_to', Auth::user()->id)
-                    ->orderBy('tutor_deadline', 'asc')
-                    ->where(function ($query) {
-                        $query->where('status', '=', 'uploaded')
-                            ->orWhere('status', '=', 'delivered');
-                    })
-                    ->whereNotNull('upload_date_time')
-                    ->paginate(15);
-            } elseif (\request('failed')) {
-                $tasks = Task::where('is_allocated_to', Auth::user()->id)
-                    ->orderBy('tutor_deadline', 'asc')
-                    ->where('status', '=', 'failed')
-                    ->whereNotNull('upload_date_time')
-                    ->paginate(15);
-            } else {
-                $tasks = Task::where('is_allocated_to', Auth::user()->id)
-                    ->where('tutor_deadline', '>', now())
-                    ->where('status', '=', 'allocated')
-                    ->orderBy('tutor_deadline', 'asc')
-                    ->paginate(15);
-            }
+            $userId = Auth::user()->id;
+            $tasks = Task::join('task_invitation', 'tasks.id', '=', 'task_id')
+                ->where('is_allocated_to', '=', $userId)
+                ->orWhere(function ($query) {
+                    $query->where('task_invitation.user_id', Auth::user()->id)
+                        ->whereNull('is_allocated_to');
+                })
+                ->select('tasks.*')
+                ->orderBy('tutor_deadline')
+                ->distinct()
+                ->paginate(5);
         } elseif (Auth::user()->isTheAdmin()) {
             $tasks = Task::all();
         }
@@ -83,7 +59,8 @@ class TaskController extends Controller
      *
      * @return Response
      */
-    public function create()
+    public
+    function create()
     {
         if (Auth::user()->isAnOwner()) {
             return view('tasks.create');
@@ -97,7 +74,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function store(Request $request)
+    public
+    function store(Request $request)
     {
         $validatedData = $request->validate([
             'title' => 'required',
@@ -134,7 +112,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function show(Task $task, Request $request)
+    public
+    function show(Task $task, Request $request)
     {
         if ($task->isOwnedByUser()) {
             return view('tasks.show', ['task' => $task]);
@@ -155,7 +134,8 @@ class TaskController extends Controller
      * @param Task $task
      * @return Response
      */
-    public function edit(Task $task)
+    public
+    function edit(Task $task)
     {
         if ($task->isOwnedByUser()) {
             return view('tasks.edit', ['task' => $task]);
@@ -172,7 +152,8 @@ class TaskController extends Controller
      * @param Task $task
      * @return Response
      */
-    public function update(Request $request, Task $task)
+    public
+    function update(Request $request, Task $task)
     {
         if ($task->isOwnedByUser()) {
             $validatedData = $request->validate([
@@ -202,7 +183,8 @@ class TaskController extends Controller
      * @param Task $task
      * @return Response
      */
-    public function destroy(Task $task)
+    public
+    function destroy(Task $task)
     {
         if ($task->isOwnedByUser()) {
             $task = Task::destroy($task->id);
@@ -223,7 +205,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Request
      */
-    public function allocate(Task $task, Request $request)
+    public
+    function allocate(Task $task, Request $request)
     {
         $validatedData = $request->validate([
             'email' => 'email|exists:users,email',
@@ -254,10 +237,12 @@ class TaskController extends Controller
      * @param Request $request
      * @return Request
      */
-    public function deallocate(Task $task, Request $request)
+    public
+    function deallocate(Task $task, Request $request)
     {
         if ($task->isOwnedByUser()) {
             $task->is_allocated_to = null;
+            $task->allocation_date_time = null;
             $task->save();
             $this->statusOperation($task);
             $request->session()->flash('success', 'Task deallocate is successful');
@@ -274,7 +259,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Request
      */
-    public function invite(Task $task, Request $request)
+    public
+    function invite(Task $task, Request $request)
     {
         $request->tutors = explode(',', $request->tutors);
         $invalidEmails = '';
@@ -304,7 +290,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Request
      */
-    public function deinvite(Task $task, Request $request)
+    public
+    function deinvite(Task $task, Request $request)
     {
         $task->invitedTutors()->detach($request->tutorId);
         $this->statusOperation($task);
@@ -318,7 +305,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return Application|ResponseFactory|Response
      */
-    public function fileDownload(Task $task, Request $request)
+    public
+    function fileDownload(Task $task, Request $request)
     {
         if (
             $request->type == 'requirement'
@@ -371,7 +359,8 @@ class TaskController extends Controller
      * @param Request $request
      * @return bool
      */
-    public function solutionUpload(Task $task, Request $request)
+    public
+    function solutionUpload(Task $task, Request $request)
     {
         $validatedData = $request->validate([
             'upload_type' => 'required|in:complete,partial',
@@ -396,7 +385,6 @@ class TaskController extends Controller
         }
         return redirect()->route('tasks.show', ['task' => $task])->with('error', 'Task is not allocated to you');
     }
-
 
     public function solutionRemove(Task $task, Request $request)
     {
@@ -499,6 +487,114 @@ class TaskController extends Controller
         } else {
             return back()->with('error', 'You are not allowed to perform this request');
         }
+    }
+
+    public function search(Request $request)
+    {
+        $validatedData = $request->validate([
+            'dlStartDate' => 'date',
+            'dlEndDate' => 'date|after:dlStartDate',
+            'minWordCount' => '',
+            'maxWordCount' => '',
+            'status' => 'sometimes|required|in:unproductive,missed,invited,allocated,completed,escalated,failed',
+        ]);
+        $tasks = Task::query();
+        $query = "Searching for <span style='text-decoration: underline; font-style: italic'>";
+        if(Auth::user()->isATutor()) {
+            if ($validatedData['status'] == 'invited') {
+                $tasks->join('task_invitation', 'tasks.id', '=', 'task_id')
+                    ->whereNull('is_allocated_to')
+                    ->where('task_invitation.user_id', Auth::user()->id)
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " invited";
+            }
+            if ($validatedData['status'] == 'allocated') {
+                $tasks->where('is_allocated_to', Auth::user()->id)
+                    ->where('tutor_deadline', '>', now())
+                    ->where('status', '=', 'allocated')
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " allocated";
+            }
+            if ($validatedData['status'] == 'missed') {
+                $tasks->where('is_allocated_to', Auth::user()->id)
+                    ->where('tutor_deadline', '<', now())
+                    ->where('status', '=', 'allocated')
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " deadline missed";
+            }
+            if ($validatedData['status'] == 'escalated') {
+                $tasks->where('is_allocated_to', Auth::user()->id)
+                    ->where('status', '=', 'escalated')
+                    ->whereNotNull('upload_date_time')
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " escalated";
+            }
+            if ($validatedData['status'] == 'completed') {
+                $tasks->where('is_allocated_to', Auth::user()->id)
+                    ->whereNotNull('upload_date_time')
+                    ->where(function ($query) {
+                        $query->where('status', '=', 'uploaded')
+                            ->orWhere('status', '=', 'delivered');
+                    })
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " completed";
+            }
+            if ($validatedData['status'] == 'failed') {
+                $tasks->where('is_allocated_to', Auth::user()->id)
+                    ->whereNotNull('upload_date_time')
+                    ->where('status', '=', 'failed')
+                    ->orderBy('tutor_deadline', 'desc')
+                    ->select('tasks.*')
+                    ->distinct();
+                $query .= " failed";
+            }
+            $query .= "</span> tasks";
+            if($validatedData['dlStartDate'] != null) {
+                $tasks->where('tutor_deadline', '>', $validatedData['dlStartDate']);
+                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> ". $validatedData['dlStartDate'];
+            }
+            if($validatedData['dlEndDate'] != null) {
+                $tasks->where('tutor_deadline', '<', $validatedData['dlEndDate']);
+                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> ". $validatedData['dlEndDate'];
+            }
+        }
+        if(Auth::user()->isAnOwner()) {
+            $tasks->where('status', '=', $validatedData['status']);
+            $query .= " {$validatedData['status']}";
+            $query .= "</span> tasks";
+            if($validatedData['dlStartDate'] != null) {
+                $tasks->where('student_deadline', '>', $validatedData['dlStartDate']);
+                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> ". $validatedData['dlStartDate'];
+            }
+            if($validatedData['dlEndDate'] != null) {
+                $tasks->where('student_deadline', '<', $validatedData['dlEndDate']);
+                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> ". $validatedData['dlEndDate'];
+            }
+        }
+        if($validatedData['minWordCount'] != null) {
+            $tasks->where('total_word_count', '>', $validatedData['minWordCount']);
+            $query .= " <span style='text-decoration: underline; font-style: italic'>min:word count</span> ". $validatedData['minWordCount'] ." words";
+        }
+        if($validatedData['maxWordCount'] != null) {
+            $tasks->where('total_word_count', '<', $validatedData['maxWordCount']);
+            $query .= " <span style='text-decoration: underline; font-style: italic'>max:word count</span> ". $validatedData['maxWordCount'] ." words";
+        }
+        $tasks = $tasks->get();
+        $data = [
+          'tasks' => $tasks,
+          'query' => $query
+        ];
+        return view('tasks.search', ['data' => $data]);
     }
 
     /**
