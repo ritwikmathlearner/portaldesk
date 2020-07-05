@@ -9,6 +9,7 @@ window._ = require('lodash');
 try {
     window.Popper = require('popper.js').default;
     window.$ = window.jQuery = require('jquery');
+    window.ClipboardJS = require('clipboard/dist/clipboard.min');
 
     require('bootstrap');
 } catch (e) {}

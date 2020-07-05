@@ -422,14 +422,19 @@
                                     <form
                                         method="POST"
                                         action="{{ route('tasks.deinvite', ['task' => $task]) }}"
-                                        class="d-inline"
+                                        class="d-inline border border-info rounded-pill py-0 pl-2 m-1"
                                     >
                                         @csrf
                                         <input type="hidden" name="tutorId" value="{{ $tutor->id }}">
-                                        <button type="submit"
-                                                class="btn py-1 px-2 m-1 border border-info text-info rounded-pill">
+                                        <button
+                                            class="btn p-0 text-info"
+                                            onclick="event.preventDefault()"
+                                            data-clipboard-text="{{ $tutor->email }}"
+                                            title="Copy email address">
                                             {{ $tutor->name }}
-                                            <i class="fas fa-times text-danger ml-1"></i>
+                                        </button>
+                                        <button type="submit" class="btn" title="Remove invitation">
+                                            <i class="fas fa-times text-danger"></i>
                                         </button>
                                     </form>
                                 @empty
@@ -551,7 +556,14 @@
                                         class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
                                     <span class="d-block">{{ $message->pivot->message }}</span>
                                     @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
-                                        <small><i>By: </i> {{ App\User::find($message->pivot->user_id)->name }}</small>
+                                        <small><i>By: </i>
+                                            <span
+                                                class="btn btn-warning rounded-pill p-1"
+                                                data-clipboard-text="{{ App\User::find($message->pivot->user_id)->email }}"
+                                                title="Copy email address">
+                                                {{ App\User::find($message->pivot->user_id)->name }}
+                                            </span>
+                                        </small>
                                     @else
                                         <small>You</small>
                                     @endif
@@ -571,7 +583,13 @@
                                             class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
                                         <span class="d-block">{{ $message->pivot->message }}</span>
                                         @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
-                                            <small><i>By: </i> {{ App\User::find($message->pivot->user_id)->name }}
+                                            <small><i>By: </i>
+                                                <span
+                                                    class="btn btn-warning rounded-pill p-1"
+                                                    data-clipboard-text="{{ App\User::find($message->pivot->user_id)->email }}"
+                                                    title="Copy email address">
+                                                    {{ App\User::find($message->pivot->user_id)->name }}
+                                                </span>
                                             </small>
                                         @else
                                             <small>You</small>
