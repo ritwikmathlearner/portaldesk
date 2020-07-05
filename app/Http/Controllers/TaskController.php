@@ -443,11 +443,16 @@ class TaskController extends Controller
 
     public function escalate(Task $task, Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'escalation_message' => 'required|max:500|min:10'
         ]);
         if ($task->isOwnedByUser()) {
+            $user = $task->user;
             $this->statusOperation($task, 'escalated', true);
+            $task->userDiscussions()->attach($user->id, [
+                'message' => $validatedData['escalation_message'],
+                'type' => 'escalation'
+            ]);
             return redirect()
                 ->route('tasks.show', ['task' => $task])
                 ->with('success', 'Escalation submitted successfully');
@@ -457,11 +462,16 @@ class TaskController extends Controller
 
     public function fail(Task $task, Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'fail_message' => 'required|max:500|min:10'
         ]);
         if ($task->isOwnedByUser()) {
+            $user = $task->user;
             $this->statusOperation($task, 'failed', true);
+            $task->userDiscussions()->attach($user->id, [
+                'message' => $validatedData['fail_message'],
+                'type' => 'fail'
+            ]);
             return redirect()
                 ->route('tasks.show', ['task' => $task])
                 ->with('success', 'Task is marked as failed successfully');

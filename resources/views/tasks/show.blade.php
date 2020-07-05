@@ -544,43 +544,19 @@
                         <h1 class="text-center">Discussions</h1>
                     </div>
                     <div
-                        class="col-12 col-md-8 bg-white text-secondary rounded d-flex justify-content-start flex-column-reverse p-3"
-                        style="height: 50vh; overflow-y: scroll">
-                        @if($task->isOwnedByUser())
-                            @foreach($task->userDiscussions as $message)
-                                <div class="p-2 text-light m-0 my-2 rounded
-                                {{ $message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id ? 'align-self-end bg-success' : 'align-self-start bg-primary'}}
-                                    "
-                                     style="max-width: 90%;">
-                                    <small
-                                        class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
-                                    <span class="d-block">{{ $message->pivot->message }}</span>
-                                    @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
-                                        <small><i>By: </i>
-                                            <span
-                                                class="btn btn-warning rounded-pill p-1"
-                                                data-clipboard-text="{{ App\User::find($message->pivot->user_id)->email }}"
-                                                title="Copy email address">
-                                                {{ App\User::find($message->pivot->user_id)->name }}
-                                            </span>
-                                        </small>
-                                    @else
-                                        <small>You</small>
-                                    @endif
-                                    <small><i>On: </i>{{ \Carbon\Carbon::parse($message->pivot->created_at)->toDayDateTimeString() }}
-                                    </small>
-
-                                </div>
-                            @endforeach
-                        @else
-                            @foreach($task->userDiscussions as $message)
-                                @if($message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id || $message->pivot->user_id == $task->user->id)
+                        class="col-12 col-md-8 bg-white text-secondary rounded p-3"
+                        style="height: 50vh; overflow-y: auto; overflow-x: hidden">
+                        <div class="d-flex justify-content-start flex-column-reverse">
+                            @if($task->isOwnedByUser())
+                                @foreach($task->userDiscussions as $message)
                                     <div class="p-2 text-light m-0 my-2 rounded
                                 {{ $message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id ? 'align-self-end bg-success' : 'align-self-start bg-primary'}}
                                         "
                                          style="max-width: 90%;">
                                         <small
-                                            class="d-inline-block bg-dark text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
+                                            class="d-inline-block
+                                             {{ $message->pivot->type == 'escalation' || $message->pivot->type == 'fail' ? 'bg-danger' : 'bg-dark'}}
+                                                text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
                                         <span class="d-block">{{ $message->pivot->message }}</span>
                                         @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
                                             <small><i>By: </i>
@@ -588,8 +564,8 @@
                                                     class="btn btn-warning rounded-pill p-1"
                                                     data-clipboard-text="{{ App\User::find($message->pivot->user_id)->email }}"
                                                     title="Copy email address">
-                                                    {{ App\User::find($message->pivot->user_id)->name }}
-                                                </span>
+                                                {{ App\User::find($message->pivot->user_id)->name }}
+                                            </span>
                                             </small>
                                         @else
                                             <small>You</small>
@@ -598,9 +574,39 @@
                                         </small>
 
                                     </div>
-                                @endif
-                            @endforeach
-                        @endif
+                                @endforeach
+                            @else
+                                @foreach($task->userDiscussions as $message)
+                                    @if($message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id || $message->pivot->user_id == $task->user->id)
+                                        <div class="p-2 text-light
+                                    {{ $message->pivot->user_id == \Illuminate\Support\Facades\Auth::user()->id ? 'align-self-end bg-success' : 'align-self-start bg-primary'}}
+                                            m-0 my-2 rounded"
+                                             style="max-width: 90%;">
+                                            <small
+                                                class="d-inline-block
+                                             {{ $message->pivot->type == 'escalation' || $message->pivot->type == 'fail' ? 'bg-danger' : 'bg-dark'}}
+                                                    text-light px-2 py-1 mb-2 rounded-pill">{{ ucfirst($message->pivot->type) }}</small>
+                                            <span class="d-block">{{ $message->pivot->message }}</span>
+                                            @if(\Illuminate\Support\Facades\Auth::user()->id != $message->pivot->user_id)
+                                                <small><i>By: </i>
+                                                    <span
+                                                        class="btn btn-warning rounded-pill p-1"
+                                                        data-clipboard-text="{{ App\User::find($message->pivot->user_id)->email }}"
+                                                        title="Copy email address">
+                                                    {{ App\User::find($message->pivot->user_id)->name }}
+                                                </span>
+                                                </small>
+                                            @else
+                                                <small>You</small>
+                                            @endif
+                                            <small><i>On: </i>{{ \Carbon\Carbon::parse($message->pivot->created_at)->toDayDateTimeString() }}
+                                            </small>
+
+                                        </div>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </div>
                     </div>
                     <div class="col-12 col-md-4 px-0 px-md-3 mt-3 mt-md-0">
                         <form
