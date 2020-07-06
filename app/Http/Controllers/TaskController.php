@@ -77,32 +77,35 @@ class TaskController extends Controller
     public
     function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'title' => 'required',
-            'total_word_count' => 'required|integer',
-            'word_count_break' => 'required',
-            'country' => '',
-            'reference_style' => '',
-            'description' => 'required|max:1000',
-            'student_deadline' => 'required|date|after:now',
-            'tutor_deadline' => 'required|date|before:student_deadline|after:now',
-            'requirement_file' => 'required|mimes:zip,rar|max:20480'
-        ]);
-        $validatedData['created_by'] = Auth::user()->id;
-        $validatedData['student_deadline'] = Carbon::parse($request->student_deadline)->format('Y-m-d H:i:s');
-        $validatedData['tutor_deadline'] = Carbon::parse($request->tutor_deadline)->format('Y-m-d H:i:s');
-        $extension = $request->file('requirement_file')->extension();
-        $validatedData['requirement_path'] = Storage::putFileAs(
-            'requirements',
-            $request->file('requirement_file'),
-            "{$request->title}_{$validatedData['created_by']}_" . time() . '.' . $extension
-        );
-        $task = Task::create($validatedData);
-        $tag = Tag::firstOrCreate([
-            'tag_name' => $task->title
-        ]);
-        $task->tags()->attach($tag->id);
-        return redirect()->route('tasks.show', ['task' => $task]);
+        if (Auth::user()->isAnOwner()) {
+            $validatedData = $request->validate([
+                'title' => 'required',
+                'total_word_count' => 'required|integer',
+                'word_count_break' => 'required',
+                'country' => '',
+                'reference_style' => '',
+                'description' => 'required|max:1000',
+                'student_deadline' => 'required|date|after:now',
+                'tutor_deadline' => 'required|date|before:student_deadline|after:now',
+                'requirement_file' => 'required|mimes:zip,rar|max:20480'
+            ]);
+            $validatedData['created_by'] = Auth::user()->id;
+            $validatedData['student_deadline'] = Carbon::parse($request->student_deadline)->format('Y-m-d H:i:s');
+            $validatedData['tutor_deadline'] = Carbon::parse($request->tutor_deadline)->format('Y-m-d H:i:s');
+            $extension = $request->file('requirement_file')->extension();
+            $validatedData['requirement_path'] = Storage::putFileAs(
+                'requirements',
+                $request->file('requirement_file'),
+                "{$request->title}_{$validatedData['created_by']}_" . time() . '.' . $extension
+            );
+            $task = Task::create($validatedData);
+            $tag = Tag::firstOrCreate([
+                'tag_name' => $task->title
+            ]);
+            $task->tags()->attach($tag->id);
+            return redirect()->route('tasks.show', ['task' => $task])->with('toast_success', 'Task added');
+        }
+        return redirect()->route('tasks.index')->with('warning', 'You are not authorized to access the task');
     }
 
     /**
@@ -124,8 +127,7 @@ class TaskController extends Controller
         if ($task->is_allocated_to == null && $this->isTutorInvited(Auth::user()->email, $task)) {
             return view('tasks.show', ['task' => $task]);
         }
-        $request->session()->flash('error', 'You are not authorized to access the task');
-        return redirect()->route('tasks.index');
+        return redirect()->route('tasks.index')->with('warning', 'You are not authorized to access the task');
     }
 
     /**
@@ -142,7 +144,7 @@ class TaskController extends Controller
         }
         return redirect()
             ->route('tasks.index')
-            ->with('error', 'Your are not authorized to perform this request');
+            ->with('warning', 'Your are not authorized to perform this request');
     }
 
     /**
@@ -174,7 +176,7 @@ class TaskController extends Controller
         }
         return redirect()
             ->route('tasks.index')
-            ->with('error', 'Your are not authorized to perform this request');
+            ->with('warning', 'Your are not authorized to perform this request');
     }
 
     /**
@@ -191,11 +193,11 @@ class TaskController extends Controller
             if ($task != 0) {
                 return redirect()->route('tasks.index')->with('success', 'Task deleted successfully');
             }
-            return redirect()->route('tasks.index')->with('error', 'Task delete request failed');
+            return redirect()->route('tasks.index')->with('warning', 'Task delete request failed');
         }
         return redirect()
             ->route('tasks.index')
-            ->with('error', 'Your are not authorized to perform this request');
+            ->with('warning', 'Your are not authorized to perform this request');
     }
 
     /**
@@ -226,7 +228,7 @@ class TaskController extends Controller
                 return redirect()->route('tasks.show', ['task' => $task]);
             }
         }
-        $request->session()->flash('error', 'You are not authorized perform the request');
+        $request->session()->flash('warning', 'You are not authorized perform the request');
         return redirect()->route('tasks.index');
     }
 
@@ -336,7 +338,7 @@ class TaskController extends Controller
                 $this->statusOperation($task, 'delivered');
             }
         } else {
-            return redirect()->route('tasks.show', ['task' => $task])->with('error', 'Requested requirement file is from another task');
+            return redirect()->route('tasks.show', ['task' => $task])->with('warning', 'Requested requirement file is from another task');
         }
         if (Storage::exists($path)) {
             $file = Storage::get($path);
@@ -381,9 +383,9 @@ class TaskController extends Controller
             }
             $task->save();
             $this->statusOperation($task);
-            return redirect()->route('tasks.show', ['task' => $task]);
+            return redirect()->route('tasks.show', ['task' => $task])->with('success', 'Task uploaded successfully');
         }
-        return redirect()->route('tasks.show', ['task' => $task])->with('error', 'Task is not allocated to you');
+        return redirect()->route('tasks.show', ['task' => $task])->with('warning', 'Task is not allocated to you');
     }
 
     public function solutionRemove(Task $task, Request $request)
@@ -425,7 +427,7 @@ class TaskController extends Controller
                 ->route('tasks.show', ['task' => $task])
                 ->with('success', 'Requirement file uploaded successfully');
         }
-        return back()->with('error', 'You are not allowed to perform this request');
+        return back()->with('warning', 'You are not allowed to perform this request');
     }
 
     public function changeStatus(Task $task, Request $request)
@@ -457,7 +459,7 @@ class TaskController extends Controller
                 ->route('tasks.show', ['task' => $task])
                 ->with('success', 'Escalation submitted successfully');
         }
-        return back()->with('error', 'You are not allowed to perform this request');
+        return back()->with('warning', 'You are not allowed to perform this request');
     }
 
     public function fail(Task $task, Request $request)
@@ -476,7 +478,7 @@ class TaskController extends Controller
                 ->route('tasks.show', ['task' => $task])
                 ->with('success', 'Task is marked as failed successfully');
         }
-        return back()->with('error', 'You are not allowed to perform this request');
+        return back()->with('warning', 'You are not allowed to perform this request');
     }
 
     public function storeMessage(Task $task, Request $request)
@@ -493,9 +495,9 @@ class TaskController extends Controller
                 'type' => $validatedData['type']
             ]);
             return redirect()
-                ->route('tasks.show', ['task' => $task]);
+                ->route('tasks.show', ['task' => $task])->with('toast_success', 'Message sent');
         } else {
-            return back()->with('error', 'You are not allowed to perform this request');
+            return back()->with('warning', 'You are not allowed to perform this request');
         }
     }
 
@@ -506,11 +508,11 @@ class TaskController extends Controller
             'dlEndDate' => 'date|after:dlStartDate',
             'minWordCount' => '',
             'maxWordCount' => '',
-            'status' => 'sometimes|required|in:unproductive,missed,invited,allocated,completed,escalated,failed',
+            'status' => 'required|in:unproductive,missed,invited,allocated,completed,escalated,failed',
         ]);
         $tasks = Task::query();
         $query = "Searching for <span style='text-decoration: underline; font-style: italic'>";
-        if(Auth::user()->isATutor()) {
+        if (Auth::user()->isATutor()) {
             if ($validatedData['status'] == 'invited') {
                 $tasks->join('task_invitation', 'tasks.id', '=', 'task_id')
                     ->whereNull('is_allocated_to')
@@ -569,40 +571,40 @@ class TaskController extends Controller
                 $query .= " failed";
             }
             $query .= "</span> tasks";
-            if($validatedData['dlStartDate'] != null) {
+            if ($validatedData['dlStartDate'] != null) {
                 $tasks->where('tutor_deadline', '>', $validatedData['dlStartDate']);
-                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> ". $validatedData['dlStartDate'];
+                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> " . $validatedData['dlStartDate'];
             }
-            if($validatedData['dlEndDate'] != null) {
+            if ($validatedData['dlEndDate'] != null) {
                 $tasks->where('tutor_deadline', '<', $validatedData['dlEndDate']);
-                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> ". $validatedData['dlEndDate'];
+                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> " . $validatedData['dlEndDate'];
             }
         }
-        if(Auth::user()->isAnOwner()) {
+        if (Auth::user()->isAnOwner()) {
             $tasks->where('status', '=', $validatedData['status']);
             $query .= " {$validatedData['status']}";
             $query .= "</span> tasks";
-            if($validatedData['dlStartDate'] != null) {
+            if ($validatedData['dlStartDate'] != null) {
                 $tasks->where('student_deadline', '>', $validatedData['dlStartDate']);
-                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> ". $validatedData['dlStartDate'];
+                $query .= " <span style='text-decoration: underline; font-style: italic'>min:deadline</span> " . $validatedData['dlStartDate'];
             }
-            if($validatedData['dlEndDate'] != null) {
+            if ($validatedData['dlEndDate'] != null) {
                 $tasks->where('student_deadline', '<', $validatedData['dlEndDate']);
-                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> ". $validatedData['dlEndDate'];
+                $query .= " <span style='text-decoration: underline; font-style: italic'>max:deadline</span> " . $validatedData['dlEndDate'];
             }
         }
-        if($validatedData['minWordCount'] != null) {
+        if ($validatedData['minWordCount'] != null) {
             $tasks->where('total_word_count', '>', $validatedData['minWordCount']);
-            $query .= " <span style='text-decoration: underline; font-style: italic'>min:word count</span> ". $validatedData['minWordCount'] ." words";
+            $query .= " <span style='text-decoration: underline; font-style: italic'>min:word count</span> " . $validatedData['minWordCount'] . " words";
         }
-        if($validatedData['maxWordCount'] != null) {
+        if ($validatedData['maxWordCount'] != null) {
             $tasks->where('total_word_count', '<', $validatedData['maxWordCount']);
-            $query .= " <span style='text-decoration: underline; font-style: italic'>max:word count</span> ". $validatedData['maxWordCount'] ." words";
+            $query .= " <span style='text-decoration: underline; font-style: italic'>max:word count</span> " . $validatedData['maxWordCount'] . " words";
         }
         $tasks = $tasks->get();
         $data = [
-          'tasks' => $tasks,
-          'query' => $query
+            'tasks' => $tasks,
+            'query' => $query
         ];
         return view('tasks.search', ['data' => $data]);
     }

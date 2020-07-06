@@ -11,7 +11,6 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
-
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
@@ -34,6 +33,7 @@
     @livewireStyles
 </head>
 <body>
+@include('sweetalert::alert')
 <div id="app">
     <nav class="navbar navbar-expand-md navbar-dark bg-dark shadow-sm">
         <div class="container">
@@ -110,13 +110,6 @@
             </div>
         </div>
     </nav>
-    <div class="container mt-3">
-        @if(session()->has('error'))
-            <p class="bg-danger text-light p-1" id="flash-message">{{ session()->get('error') }}</p>
-        @elseif(session()->has('success'))
-            <p class="bg-success text-light p-1" id="flash-message">{{ session()->get('success') }}</p>
-        @endif
-    </div>
     <main class="py-4">
         @yield('content')
     </main>
