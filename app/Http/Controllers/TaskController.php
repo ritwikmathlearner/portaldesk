@@ -295,9 +295,12 @@ class TaskController extends Controller
     public
     function deinvite(Task $task, Request $request)
     {
-        $task->invitedTutors()->detach($request->tutorId);
-        $this->statusOperation($task);
-        return redirect()->route('tasks.show', ['task' => $task]);
+        if($task->isOwnedByUser()){
+            $task->invitedTutors()->detach($request->tutorId);
+            $this->statusOperation($task);
+            return redirect()->route('tasks.show', ['task' => $task])->with('toast_success', 'Invitation removed');
+        }
+        return back()->with('error', 'You are not authorized perform the request');
     }
 
     /**
