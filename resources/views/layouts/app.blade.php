@@ -11,6 +11,7 @@
 
     <!-- Scripts -->
     <script src="{{ asset('js/app.js') }}" defer></script>
+    <script src="https://js.stripe.com/v3/"></script>
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css?family=Nunito" rel="stylesheet">
@@ -129,6 +130,41 @@
         }
         return false;
     }
+
+    window.addEventListener('load', ()=> {
+        const stripe = Stripe('{{ env('STRIPE_KEY') }}');
+
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+
+        cardElement.mount('#card-element');
+
+        const cardHolderName = document.getElementById('card-holder-name');
+        const cardButton = document.getElementById('card-button');
+        const clientSecret = cardButton.dataset.secret;
+        const plan = document.getElementById('plan').value;
+
+        cardButton.addEventListener('click', async (e) => {
+            const { setupIntent, error } = await stripe.confirmCardSetup(
+                clientSecret, {
+                    payment_method: {
+                        card: cardElement,
+                        billing_details: { name: cardHolderName.value }
+                    }
+                }
+            );
+
+            if (error) {
+                // Display "error.message" to the user...
+            } else {
+                console.log('handling', setupIntent.payment_method);
+                axios.post('/payments/subscribe', {
+                    payment_method: setupIntent.payment_method,
+                    plan: plan
+                })
+            }
+        });
+    })
 </script>
 </body>
 </html>
