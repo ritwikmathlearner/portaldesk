@@ -36,4 +36,3 @@ Route::post('/tasks/{task}/message', 'TaskController@storeMessage')->name('tasks
 Route::resource('tags', 'TagController')->only(['store', 'destroy']);
 Route::get('/tags/search', 'TagController@search')->name('tags.search');
 Route::post('/tasks/search', 'TaskController@search')->name('tasks.search');
-
