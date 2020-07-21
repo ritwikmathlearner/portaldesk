@@ -17,10 +17,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+Auth::routes(['verify'=>true]);
 
 Route::get('/home', 'HomeController@index')->name('home');
-Route::resource('tasks', 'TaskController');
+Route::resource('tasks', 'TaskController')->middleware('verified');
 Route::post('/tasks/{task}/allocate', 'TaskController@allocate')->name('tasks.allocate');
 Route::post('/tasks/{task}/deallocate', 'TaskController@deallocate')->name('tasks.deallocate');
 Route::post('/tasks/{task}/invite', 'TaskController@invite')->name('tasks.invite');
