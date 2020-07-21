@@ -6,16 +6,33 @@
             <div class="col-md-7 p-3">
                 <div class="container">
                     <div class="row align-items-center mb-4">
-                        <span class="h3 mr-2 my-0">{{ ucfirst($task->title) }}</span>
-                        <small
-                            class="border
+                        <div class="col-12 px-0">
+                            <span class="h3 mr-2 my-0">{{ ucfirst($task->title) }}</span>
+                            <small
+                                class="border
                                     {{ $task->status == 'failed'
                                         ? 'border-danger text-danger' : ($task->status == 'unproductive'
                                         ? 'border-secondary text-secondary' : ($task->status == 'delivered'
                                         ? 'border-success text-success' : 'border-primary text-primary')) }}
-                                px-2 py-1 rounded-pill">
-                            {{ ucfirst($task->status) }}
-                        </small>
+                                    px-2 py-1 rounded-pill">
+                                {{ ucfirst($task->status) }}
+                            </small>
+                        </div>
+                        <div class="col-12 px-0">
+                            @error('escalation_message')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            @error('fail_message')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            @error('solution_file')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                            <br>
+                            @error('upload_type')
+                            <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
                     </div>
                 </div>
                 @if($task->isOwnedByUser())
@@ -61,9 +78,6 @@
                                                         class="form-control"
                                                         placeholder="Required changes"
                                                         required>{{ old('escalation_message') }}</textarea>
-                                                    @error('escalation_message')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                    @enderror
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
@@ -81,16 +95,6 @@
                             <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#failModel">
                                 Mark as fail
                             </button>
-                            <div>
-                                @error('solution_file')
-                                <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                                <br>
-                                @error('upload_type')
-                                <small class="text-danger">{{ $message }}</small>
-                                @enderror
-                            </div>
-
                             <!-- Modal -->
                             <div class="modal fade" id="failModel" tabindex="-1" role="dialog"
                                  aria-labelledby="failModelLabel" aria-hidden="true">
@@ -117,9 +121,6 @@
                                                         class="form-control"
                                                         placeholder="Valid reason for student fail"
                                                         required>{{ old('fail_message') }}</textarea>
-                                                    @error('fail_message')
-                                                    <small class="text-danger">{{ $message }}</small>
-                                                    @enderror
                                                 </div>
                                             </div>
                                             <div class="modal-footer">

@@ -332,7 +332,7 @@ class TaskController extends Controller
             (
                 $task->isOwnedByUser()
                 ||
-                $task->allocatedTo() == Auth::user()
+                $task->allocatedTo == Auth::user()
             )
         ) {
             $fileName = str_replace("solutions/", "", $task->solution_path);
